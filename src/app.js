@@ -19,6 +19,8 @@ const CAND_MIN_AREA = 350; // m² flat roof to flag as rooftop-garden candidate
 const CAND_MAX_H = 20; // m — taller than this is awkward to garden
 
 const RAD = 180 / Math.PI;
+const cF = (c) => (c * 9) / 5 + 32; // °C -> °F (absolute temperature)
+const dF = (d) => (d * 9) / 5; // °C -> °F (temperature difference)
 let buildingsReady = false;
 let playing = false;
 let playTimer = null;
@@ -321,7 +323,8 @@ function setHeatScene(id) {
   setHeatLabel(s);
 }
 function setHeatLabel(s) {
-  if (s.min != null && s.max != null) $('heat-mid').textContent = `${s.min}–${s.max}°C`;
+  if (s.min != null && s.max != null)
+    $('heat-mid').textContent = `${cF(s.min).toFixed(0)}–${cF(s.max).toFixed(0)}°F`;
 }
 async function loadAttribution() {
   let a;
@@ -330,12 +333,12 @@ async function loadAttribution() {
   } catch {
     return;
   }
-  if (a.greenroof_delta != null) $('ins-park').textContent = `${a.greenroof_delta}°C`;
+  if (a.greenroof_delta != null) $('ins-park').textContent = `${dF(a.greenroof_delta).toFixed(1)}°F`;
   if (a.n_roofveg != null) $('ins-veg').textContent = a.n_roofveg;
   if (a.n_priority != null) $('ins-pri').textContent = a.n_priority;
   try {
     const c = await (await fetch('data/cooling_stats.json')).json();
-    if (c.max_cooling_C != null) $('ins-cool').textContent = `up to −${c.max_cooling_C}°C`;
+    if (c.max_cooling_C != null) $('ins-cool').textContent = `up to −${dF(c.max_cooling_C).toFixed(1)}°F`;
   } catch {}
 }
 function markHeatMissing() {
@@ -462,7 +465,9 @@ function onBuildingClick(e) {
       ? `<div class="stat"><span>rooftop NDVI</span><b>${ndvi.toFixed(2)}${exc != null ? ` (${exc >= 0 ? '+' : ''}${exc.toFixed(2)} vs block)` : ''}${p._roofveg ? ' 🌿' : ''}</b></div>`
       : '';
   const lstRow =
-    lst != null ? `<div class="stat"><span>roof temp (summer)</span><b>${lst.toFixed(1)} °C</b></div>` : '';
+    lst != null
+      ? `<div class="stat"><span>roof temp (summer)</span><b>${cF(lst).toFixed(0)} °F</b></div>`
+      : '';
   const ts = parseTs(p._ts);
   const tsBlock =
     ts && ts.length >= 3
@@ -615,18 +620,18 @@ function sparkline(ts) {
   const H = 58;
   const pad = 8;
   const xs = ts.map((d) => d[0]);
-  const ys = ts.map((d) => d[1]);
+  const ys = ts.map((d) => cF(d[1])); // °C -> °F for display
   const x0 = Math.min(...xs);
   const x1 = Math.max(...xs);
   const y0 = Math.min(...ys);
   const y1 = Math.max(...ys);
   const px = (x) => pad + ((x - x0) / (x1 - x0 || 1)) * (W - 2 * pad);
   const py = (y) => H - pad - ((y - y0) / (y1 - y0 || 1)) * (H - 2 * pad);
-  const pts = ts.map((d) => `${px(d[0]).toFixed(1)},${py(d[1]).toFixed(1)}`).join(' ');
+  const pts = ts.map((d, i) => `${px(d[0]).toFixed(1)},${py(ys[i]).toFixed(1)}`).join(' ');
   const trend = ys[ys.length - 1] - ys[0];
-  const col = trend > 0.6 ? '#ff6b5e' : trend < -0.6 ? '#7CFF5B' : '#ffb454';
+  const col = trend > 1 ? '#ff6b5e' : trend < -1 ? '#7CFF5B' : '#ffb454';
   const dots = ts
-    .map((d) => `<circle cx="${px(d[0]).toFixed(1)}" cy="${py(d[1]).toFixed(1)}" r="2.2" fill="${col}"/>`)
+    .map((d, i) => `<circle cx="${px(d[0]).toFixed(1)}" cy="${py(ys[i]).toFixed(1)}" r="2.2" fill="${col}"/>`)
     .join('');
   return `<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
     <polyline fill="none" stroke="${col}" stroke-width="2" points="${pts}"/>${dots}

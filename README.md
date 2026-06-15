@@ -11,15 +11,15 @@ Built as a companion analysis to [ropitz/urban_ag_stl](https://github.com/ropitz
 ## What it shows
 
 - **Seasonal surface heat** — real Landsat-8/9 land-surface-temperature scenes
-  (Winter → Summer, scrub the selector). Summer rooftops hit ~50 °C; parks stay cool.
+  (Winter → Summer, scrub the selector). Summer rooftops hit ~122 °F; parks stay cool.
 - **3D buildings** — Overture footprints extruded by height.
 - **Live shadows** — SunCalc + a date/time slider cast building shadows in real time;
   click a building for the **best-shaded side to plant** (cool, low-water bed placement).
 - **Existing roof greenery (NDVI outliers)** — per-building Sentinel-2 NDVI using only pixel
   centers **inside** the footprint, flagged only when the roof is also **greener than its
   surrounding block** (roof − context ring). Kills "building next to a tree" false positives.
-- **Heat attribution** — roof LST regressed on roof NDVI (≈ **−11.7 °C per NDVI unit**, r −0.57);
-  green roofs (NDVI > 0.4) run **~3.3 °C cooler** than bare roofs. Shown in the *Heat ↔ greenery* panel.
+- **Heat attribution** — roof land-surface temperature falls with roof NDVI; green roofs run
+  **~3–4 °F cooler** than bare roofs (NAIP 1 m). Shown in the *Heat ↔ greenery* panel (all °F).
 - **Heat-relief priority** — hot + bare + buildable roofs ranked as the best places for a **new**
   garden to cut surface heat (where greening pays off most).
 - **Shade-hours heatmap** — stacks each daylight hour's shadows so all-day-shaded ground reads
@@ -67,7 +67,7 @@ uv pip install overturemaps rasterio pystac-client planetary-computer pillow mat
 bash scripts/fetch_overture.sh        # buildings.geojson
 python scripts/fetch_osm.py           # gardens.geojson
 python scripts/prep_buildings.py      # slim + height/area/candidate flags
-python scripts/fetch_scenes_ndvi.py   # seasonal LST pngs (Winter→Fall), fixed 5–50°C ramp
+python scripts/fetch_scenes_ndvi.py   # seasonal LST pngs (Winter→Fall), fixed ramp (≈41–122 °F)
 python scripts/analyze_rooftops.py    # roof NDVI (within-polygon + context), LST attribution,
                                       # green-roof flags, heat-relief priority, attribution.json
 python scripts/lst_timeseries.py      # per-building summer roof-LST 2019–2024 (click sparkline)
