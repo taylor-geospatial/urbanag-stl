@@ -268,6 +268,10 @@ async function loadNaip() {
   try {
     b = await (await fetch('data/naip_bounds.json')).json();
   } catch {
+    const t = $('lyr-naip');
+    t.disabled = true;
+    t.closest('.toggle').style.opacity = 0.5;
+    t.closest('.toggle').querySelector('.lbl').textContent = 'NAIP aerial (unavailable)';
     return;
   }
   map.addSource('naip', { type: 'image', url: 'data/naip.png', coordinates: [b.tl, b.tr, b.br, b.bl] });
