@@ -4,7 +4,7 @@ import { Protocol } from 'pmtiles';
 import SunCalc from 'suncalc';
 
 // Vector tiles are PMTiles (cloud-native, HTTP range). DATA_BASE can point at a
-// Source Cooperative bucket via the HTTPS proxy; canonical store is FlatGeobuf (.fgb).
+// Source Cooperative bucket via the HTTPS proxy; canonical store is GeoParquet (.parquet).
 const DATA_BASE = window.DATA_BASE || 'data';
 maplibregl.addProtocol('pmtiles', new Protocol().tile);
 
@@ -50,7 +50,7 @@ map.on('load', async () => {
     curve: 1.5,
   });
 
-  await Promise.all([loadHeat(), loadGardens(), loadBuildings(), loadAttribution()]);
+  await Promise.all([loadHeat(), loadGardens(), loadBuildings(), loadAttribution(), loadCooling()]);
   $('loading').classList.add('hidden');
 
   wireUI();
@@ -237,6 +237,50 @@ function loadGardens() {
   });
 }
 
+async function loadCooling() {
+  try {
+    await (await fetch('data/cooling_stats.json')).json(); // skip if not built yet
+  } catch {
+    return;
+  }
+  map.addSource('cooling', { type: 'vector', url: `pmtiles://${DATA_BASE}/cooling.pmtiles` });
+  map.addLayer({
+    id: 'cooling',
+    type: 'fill',
+    source: 'cooling',
+    'source-layer': 'cooling',
+    layout: { visibility: 'none' },
+    paint: {
+      'fill-color': [
+        'interpolate',
+        ['linear'],
+        ['coalesce', ['get', 'cooling_C'], 0],
+        0,
+        'rgba(10,16,30,0)',
+        1,
+        '#15406b',
+        2.5,
+        '#1f8f86',
+        4,
+        '#54e0b8',
+        6,
+        '#a6fff0',
+      ],
+      'fill-opacity': 0.72,
+    },
+  });
+  map.on('click', 'cooling', (e) => {
+    const p = e.features[0].properties;
+    new maplibregl.Popup({ closeButton: false })
+      .setLngLat(e.lngLat)
+      .setHTML(
+        `<b>−${(+p.cooling_C).toFixed(1)} °C</b> if greened to NDVI 0.4` +
+          `<br><span style="color:#8b97ad">now: NDVI ${(+p.ndvi).toFixed(2)} · ${(+p.lst).toFixed(1)} °C</span>`
+      )
+      .addTo(map);
+  });
+}
+
 let heatScenes = [];
 async function loadHeat() {
   // satellite imagery (Esri World Imagery) — sits above the dark base, below heat
@@ -309,10 +353,13 @@ async function loadAttribution() {
   } catch {
     return;
   }
-  if (a.cooling_per_03ndvi != null) $('ins-cool').textContent = `−${a.cooling_per_03ndvi}°C`;
   if (a.greenroof_delta != null) $('ins-park').textContent = `${a.greenroof_delta}°C`;
   if (a.n_roofveg != null) $('ins-veg').textContent = a.n_roofveg;
   if (a.n_priority != null) $('ins-pri').textContent = a.n_priority;
+  try {
+    const c = await (await fetch('data/cooling_stats.json')).json();
+    if (c.max_cooling_C != null) $('ins-cool').textContent = `up to −${c.max_cooling_C}°C`;
+  } catch {}
 }
 function markHeatMissing() {
   $('lyr-heat').checked = false;
@@ -514,6 +561,12 @@ function wireUI() {
   $('lyr-roofs').onchange = (e) => vis('roof-candidates', e.target.checked);
   $('lyr-roofveg').onchange = (e) => vis('roofveg', e.target.checked);
   $('lyr-priority').onchange = (e) => vis('priority', e.target.checked);
+  $('lyr-cooling').onchange = (e) => {
+    vis('cooling', e.target.checked);
+    if (map.getLayer('heat')) {
+      map.setPaintProperty('heat', 'raster-opacity', e.target.checked ? 0.12 : 0.52);
+    }
+  };
   $('lyr-satellite').onchange = (e) => {
     vis('satellite', e.target.checked);
     // dim the heat wash when verifying against imagery so the photo reads clearly

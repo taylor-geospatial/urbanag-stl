@@ -35,5 +35,8 @@ def write(gdf, out):
 
 
 if __name__ == "__main__":
+    import os
     write(build("data/buildings.geojson", ts_col=True), "public/data/buildings.parquet")
     write(build("data/gardens.geojson"), "public/data/gardens.parquet")
+    if os.path.exists("data/cooling.geojson"):
+        write(build("data/cooling.geojson"), "public/data/cooling.parquet")
