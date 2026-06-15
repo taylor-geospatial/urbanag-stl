@@ -9,8 +9,8 @@ from collections import Counter
 
 import numpy as np
 import rasterio
-from rasterio.vrt import WarpedVRT
-from rasterio.enums import Resampling
+from rasterio.warp import reproject, Resampling
+from rasterio.transform import from_bounds as tfb
 import pystac_client
 import planetary_computer as pc
 from PIL import Image
@@ -42,17 +42,22 @@ def main():
     height = int((N_ - S_) * 111320 / RES_M)
     print(f"NAIP {date}: {len(items)} tiles -> {width}x{height} @ ~{RES_M} m")
 
+    dst_tf = tfb(W_, S_, E_, N_, width, height)
     rgb = np.zeros((3, height, width), "uint8")
     filled = np.zeros((height, width), bool)
     for it in items:
-        with rasterio.open(it.assets["image"].href) as s:
-            with WarpedVRT(s, crs="EPSG:4326", resampling=Resampling.bilinear) as vrt:
-                win = vrt.window(W_, S_, E_, N_)
-                arr = vrt.read(indexes=[1, 2, 3], window=win, out_shape=(3, height, width),
-                               boundless=True, fill_value=0)
-        m = (arr.max(0) > 0) & ~filled
+        # read a coarse overview (fast, small) then reproject onto the 4326 target grid
+        with rasterio.open(it.assets["image"].href, OVERVIEW_LEVEL=2) as s:
+            src = s.read([1, 2, 3])
+            src_tf, src_crs = s.transform, s.crs
+        tmp = np.zeros((3, height, width), "uint8")
         for i in range(3):
-            rgb[i][m] = arr[i][m]
+            reproject(src[i], tmp[i], src_transform=src_tf, src_crs=src_crs,
+                      dst_transform=dst_tf, dst_crs="EPSG:4326", resampling=Resampling.bilinear,
+                      src_nodata=0, dst_nodata=0)
+        m = (tmp.max(0) > 0) & ~filled
+        for i in range(3):
+            rgb[i][m] = tmp[i][m]
         filled |= m
         print(f"  +{it.id}  coverage now {filled.mean() * 100:.0f}%")
 
@@ -62,7 +67,10 @@ def main():
     json.dump({"tl": [W_, N_], "tr": [E_, N_], "br": [E_, S_], "bl": [W_, S_], "date": date},
               open("data/naip_bounds.json", "w"))
     import os
-    print(f"wrote data/naip.png ({os.path.getsize('data/naip.png') // 1024} KB)")
+    import shutil
+    for f in ("naip.png", "naip_bounds.json"):
+        shutil.copy(f"data/{f}", f"public/data/{f}")  # self-sync to the served dir
+    print(f"wrote + synced data/naip.png ({os.path.getsize('data/naip.png') // 1024} KB)")
 
 
 if __name__ == "__main__":
