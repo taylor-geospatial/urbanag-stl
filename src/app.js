@@ -522,6 +522,12 @@ function onBuildingClick(e) {
     ts && ts.length >= 3
       ? `<div class="ts-cap">summer roof temp, ${ts[0][0]}–${ts[ts.length - 1][0]}</div>${sparkline(ts)}`
       : '';
+  const ndt = parseTs(p._ndvi_ts);
+  const ndviBlock =
+    ndt && ndt.length >= 2
+      ? `<div class="ts-cap">roof greenness (peak NDVI), ${ndt[0][0]}–${ndt[ndt.length - 1][0]}</div>` +
+        sparkline(ndt, { map: (v) => v, fmt: (v) => v.toFixed(2), goodUp: true })
+      : '';
   let note = '';
   if (p._roofveg) {
     note = `<div class="advice" style="background:linear-gradient(135deg,rgba(124,255,91,.16),rgba(94,234,212,.08));border-color:rgba(124,255,91,.4)"><b>Likely existing roof greenery.</b> This roof's NDVI is an outlier <i>and</i> greener than its block — toggle <i>Satellite imagery</i> to verify.</div>`;
@@ -537,6 +543,7 @@ function onBuildingClick(e) {
     ${ndviRow}
     <div class="stat"><span>shadow now</span><b>${adv.shadowLen} m</b></div>
     <div class="stat"><span>shaded daylight</span><b>${adv.shadePct}%</b></div>
+    ${ndviBlock}
     ${tsBlock}
     ${note}
     <div class="advice">${adv.text}</div>`;
@@ -683,12 +690,17 @@ function parseTs(v) {
   }
 }
 // inline SVG sparkline of [ [year, °C], ... ]; green if cooling over time, red if warming
-function sparkline(ts) {
+// generic year→value sparkline. opts.map transforms the plotted value, opts.fmt labels it,
+// opts.goodUp colors a rising trend green (true) or red (false).
+function sparkline(ts, opts = {}) {
+  const map = opts.map || cF;
+  const fmt = opts.fmt || ((v) => `${cF(v).toFixed(0)}°`);
+  const goodUp = opts.goodUp ?? false;
   const W = 252;
   const H = 58;
   const pad = 8;
   const xs = ts.map((d) => d[0]);
-  const ys = ts.map((d) => cF(d[1])); // °C -> °F for display
+  const ys = ts.map((d) => map(d[1]));
   const x0 = Math.min(...xs);
   const x1 = Math.max(...xs);
   const y0 = Math.min(...ys);
@@ -696,15 +708,18 @@ function sparkline(ts) {
   const px = (x) => pad + ((x - x0) / (x1 - x0 || 1)) * (W - 2 * pad);
   const py = (y) => H - pad - ((y - y0) / (y1 - y0 || 1)) * (H - 2 * pad);
   const pts = ts.map((d, i) => `${px(d[0]).toFixed(1)},${py(ys[i]).toFixed(1)}`).join(' ');
-  const trend = ys[ys.length - 1] - ys[0];
-  const col = trend > 1 ? '#ff6b5e' : trend < -1 ? '#7CFF5B' : '#ffb454';
+  const rise = ys[ys.length - 1] - ys[0];
+  const up = goodUp ? '#7CFF5B' : '#ff6b5e';
+  const down = goodUp ? '#ff6b5e' : '#7CFF5B';
+  const eps = (y1 - y0) * 0.12 + 1e-6;
+  const col = rise > eps ? up : rise < -eps ? down : '#ffb454';
   const dots = ts
     .map((d, i) => `<circle cx="${px(d[0]).toFixed(1)}" cy="${py(ys[i]).toFixed(1)}" r="2.2" fill="${col}"/>`)
     .join('');
   return `<svg class="spark" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
     <polyline fill="none" stroke="${col}" stroke-width="2" points="${pts}"/>${dots}
-    <text x="${pad}" y="11" fill="#8b97ad" font-size="9">${y1.toFixed(0)}°</text>
-    <text x="${pad}" y="${H - 1}" fill="#8b97ad" font-size="9">${y0.toFixed(0)}°</text>
+    <text x="${pad}" y="11" fill="#8b97ad" font-size="9">${fmt(ts[ys.indexOf(y1)] ? ts[ys.indexOf(y1)][1] : 0)}</text>
+    <text x="${pad}" y="${H - 1}" fill="#8b97ad" font-size="9">${fmt(ts[ys.indexOf(y0)] ? ts[ys.indexOf(y0)][1] : 0)}</text>
     </svg>`;
 }
 function firstVertex(g) {

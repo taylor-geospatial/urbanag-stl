@@ -15,9 +15,13 @@ Built as a companion analysis to [ropitz/urban_ag_stl](https://github.com/ropitz
 - **3D buildings** — Overture footprints extruded by height.
 - **Live shadows** — SunCalc + a date/time slider cast building shadows in real time;
   click a building for the **best-shaded side to plant** (cool, low-water bed placement).
-- **Existing roof greenery (NDVI outliers)** — per-building Sentinel-2 NDVI using only pixel
-  centers **inside** the footprint, flagged only when the roof is also **greener than its
-  surrounding block** (roof − context ring). Kills "building next to a tree" false positives.
+- **Existing roof greenery — Sentinel-2 multi-summer NDVI** (current through 2026). For each
+  Overture footprint we build a per-summer **max-NDVI** composite (max is cloud-robust), take the
+  **median across summers 2023–2026** as *persistent* greenness, and flag a roof when that's high
+  **and** greener than its surrounding block. An **interactive NDVI-threshold slider** tunes recall
+  live; a click shows the roof's **NDVI-by-summer sparkline** (persistent-high = real garden,
+  one-off spike = noise). Per-building 10 m pixels still mix on small roofs — persistence + the
+  slider + the **NAIP/Esri imagery toggles** are the verification path.
 - **Heat attribution** — roof land-surface temperature falls with roof NDVI; green roofs run
   **~3–4 °F cooler** than bare roofs (NAIP 1 m). Shown in the *Heat ↔ greenery* panel (all °F).
 - **Heat-relief priority** — hot + bare + buildable roofs ranked as the best places for a **new**
