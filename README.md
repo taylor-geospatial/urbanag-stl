@@ -77,9 +77,10 @@ bash   scripts/tile.sh                # GeoJSON intermediates -> GeoParquet + PM
 ## Deploy
 
 Pushing to `main` triggers `.github/workflows/deploy.yml`: GitHub Actions installs with bun,
-runs `bun run build`, and publishes `public/` to GitHub Pages. The committed `public/data/`
-(buildings, gardens, seasonal LST, NDVI/priority, LST time series) is served static; Pages
-gzips the `.json` so the ~9 MB buildings file transfers at ~2–3 MB.
+runs `bun run build`, and publishes `public/` to GitHub Pages. `public/data/` holds the
+PMTiles (rendered) + GeoParquet (canonical) + seasonal LST PNGs; PMTiles are HTTP-range
+requested so the map only pulls the visible tiles. To serve the tiles from Source Cooperative
+instead, set `window.DATA_BASE` to the bucket URL (via the HTTPS proxy).
 
 ## Caveats
 
