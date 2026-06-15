@@ -28,11 +28,16 @@
   <section class="block">
     <h2>Layers</h2>
     <label class="toggle"><input type="checkbox" id="lyr-heat" checked><span class="sw"></span><span class="lbl">Surface heat (Landsat LST)</span></label>
-    <label class="toggle"><input type="checkbox" id="lyr-satellite"><span class="sw"></span><span class="lbl">Satellite imagery (verify)</span></label>
+    <label class="toggle"><input type="checkbox" id="lyr-satellite"><span class="sw"></span><span class="lbl">Satellite imagery (Esri, current)</span></label>
+    <label class="toggle"><input type="checkbox" id="lyr-naip"><span class="sw"></span><span class="lbl">NAIP aerial (NDVI source)</span></label>
     <label class="toggle"><input type="checkbox" id="lyr-buildings" checked><span class="sw"></span><span class="lbl">Buildings (3D, Overture)</span></label>
     <label class="toggle"><input type="checkbox" id="lyr-shadows" checked><span class="sw"></span><span class="lbl">Live shadows</span></label>
     <label class="toggle"><input type="checkbox" id="lyr-gardens" checked><span class="sw"></span><span class="lbl">Gardens &amp; greenhouses (OSM)</span></label>
     <label class="toggle"><input type="checkbox" id="lyr-roofveg" checked><span class="sw"></span><span class="lbl">Existing roof greenery (NDVI)</span></label>
+    <div class="ndvi-filter">
+      <div class="ndvi-row"><span>roof NDVI ≥ <b id="ndvi-val">0.18</b></span><span id="ndvi-count">—</span></div>
+      <input type="range" id="ndvi-thr" min="-10" max="55" step="1" value="18" />
+    </div>
     <label class="toggle"><input type="checkbox" id="lyr-priority"><span class="sw"></span><span class="lbl">Heat-relief priority — best new-garden roofs</span></label>
     <label class="toggle"><input type="checkbox" id="lyr-shadehours"><span class="sw"></span><span class="lbl">Shade-hours (all-day shade)</span></label>
     <label class="toggle"><input type="checkbox" id="lyr-cooling"><span class="sw"></span><span class="lbl">Cooling potential — greening payoff (°F)</span></label>

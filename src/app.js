@@ -52,7 +52,14 @@ map.on('load', async () => {
     curve: 1.5,
   });
 
-  await Promise.all([loadHeat(), loadGardens(), loadBuildings(), loadAttribution(), loadCooling()]);
+  await Promise.all([
+    loadHeat(),
+    loadGardens(),
+    loadBuildings(),
+    loadAttribution(),
+    loadCooling(),
+    loadNaip(),
+  ]);
   $('loading').classList.add('hidden');
 
   wireUI();
@@ -149,11 +156,22 @@ function loadBuildings() {
     type: 'fill-extrusion',
     source: 'buildings',
     'source-layer': 'buildings',
-    filter: ['==', ['get', '_roofveg'], 1],
+    filter: roofvegFilter(0.18),
     paint: {
       'fill-extrusion-height': ['+', ['get', '_h'], 1.5],
       'fill-extrusion-base': ['get', '_h'],
-      'fill-extrusion-color': '#7CFF5B',
+      // brighter green = greener roof (higher NDVI)
+      'fill-extrusion-color': [
+        'interpolate',
+        ['linear'],
+        ['coalesce', ['get', '_ndvi'], 0],
+        0.1,
+        '#4f9e3a',
+        0.3,
+        '#7CFF5B',
+        0.5,
+        '#d6ff7a',
+      ],
       'fill-extrusion-opacity': 0.95,
     },
   });
@@ -171,6 +189,11 @@ function loadBuildings() {
       scheduleShadows();
     }
   });
+}
+
+// green-roof candidates: roof NDVI ≥ threshold, and big enough to resolve a real roof
+function roofvegFilter(thr) {
+  return ['all', ['>=', ['coalesce', ['get', '_ndvi'], -1], thr], ['>=', ['get', '_area'], 120]];
 }
 
 // in-view building features (lng/lat geometry) straight from the vector tiles
@@ -237,6 +260,28 @@ function loadGardens() {
       .setHTML(`<b>${p.name || 'green space'}</b><br><span style="color:#a3e635">${p.category}</span>`)
       .addTo(map);
   });
+}
+
+async function loadNaip() {
+  // the actual NAIP aerial the NDVI was computed from (same date) — for matched verification
+  let b;
+  try {
+    b = await (await fetch('data/naip_bounds.json')).json();
+  } catch {
+    return;
+  }
+  map.addSource('naip', { type: 'image', url: 'data/naip.png', coordinates: [b.tl, b.tr, b.br, b.bl] });
+  map.addLayer(
+    {
+      id: 'naip',
+      type: 'raster',
+      source: 'naip',
+      layout: { visibility: 'none' },
+      paint: { 'raster-opacity': 1, 'raster-resampling': 'linear' },
+    },
+    firstSymbolId()
+  );
+  if (b.date) $('lyr-naip').closest('.toggle').querySelector('.lbl').textContent = `NAIP aerial (${b.date})`;
 }
 
 async function loadCooling() {
@@ -542,6 +587,25 @@ function wireUI() {
   };
   $('lyr-roofs').onchange = (e) => vis('roof-candidates', e.target.checked);
   $('lyr-roofveg').onchange = (e) => vis('roofveg', e.target.checked);
+  const applyNdvi = () => {
+    const thr = +$('ndvi-thr').value / 100;
+    $('ndvi-val').textContent = thr.toFixed(2);
+    if (map.getLayer('roofveg')) map.setFilter('roofveg', roofvegFilter(thr));
+    if (!$('lyr-roofveg').checked) {
+      $('lyr-roofveg').checked = true;
+      vis('roofveg', true);
+    }
+    requestAnimationFrame(() => {
+      const n = map.queryRenderedFeatures({ layers: ['roofveg'] }).length;
+      $('ndvi-count').textContent = `${n} in view`;
+    });
+  };
+  $('ndvi-thr').oninput = applyNdvi;
+  map.on('idle', applyNdvi);
+  $('lyr-naip').onchange = (e) => {
+    vis('naip', e.target.checked);
+    if (map.getLayer('heat')) map.setPaintProperty('heat', 'raster-opacity', e.target.checked ? 0.25 : 0.52);
+  };
   $('lyr-priority').onchange = (e) => vis('priority', e.target.checked);
   $('lyr-cooling').onchange = (e) => {
     vis('cooling', e.target.checked);

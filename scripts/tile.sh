@@ -27,5 +27,5 @@ PY
 rm -f /tmp/buildings_tile.geojson
 # metadata + raster overlays (heat scenes + smooth cooling surface) travel alongside the tiles
 cp -f data/attribution.json data/cooling_stats.json data/cooling_bounds.json data/heat_scenes.json \
-   data/heat_*.png data/cooling.png public/data/ 2>/dev/null || true
+   data/naip_bounds.json data/heat_*.png data/cooling.png data/naip.png public/data/ 2>/dev/null || true
 echo "built: public/data/{buildings,gardens}.{parquet,pmtiles} + cooling.png + metadata"

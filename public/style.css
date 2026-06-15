@@ -89,6 +89,12 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 #insights .ins{font-size:12px;line-height:1.5;color:#c4cde0;margin:7px 0}
 #insights .ins b{color:var(--amber);font-family:"Spline Sans Mono",monospace}
 
+.ndvi-filter{margin:2px 0 6px 44px;padding-right:4px}
+.ndvi-row{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:2px}
+.ndvi-row b{color:#7CFF5B;font-family:"Spline Sans Mono",monospace}
+#ndvi-count{color:#7CFF5B;font-family:"Spline Sans Mono",monospace}
+.ndvi-filter input[type=range]{margin:2px 0 0;height:4px;background:linear-gradient(90deg,#2b3556,#7CFF5B)}
+
 .ts-cap{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin:12px 0 3px}
 .spark{display:block;background:rgba(255,255,255,.03);border:1px solid var(--stroke);border-radius:9px}
 
