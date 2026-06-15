@@ -1,0 +1,26 @@
+{
+  "name": "stl-heat-garden",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "St. Louis Cool Roofs — heat, shade & urban-agriculture insight map (MapLibre)",
+  "scripts": {
+    "build": "bun build src/app.js --outdir public --target browser --minify --sourcemap=linked",
+    "dev": "bun build src/app.js --outdir public --target browser --watch",
+    "serve": "bun serve.js",
+    "start": "bun build src/app.js --outdir public --target browser && bun serve.js",
+    "lint": "BIOME_BINARY=./node_modules/@biomejs/cli-linux-x64-musl/biome biome check src serve.js",
+    "lint:fix": "BIOME_BINARY=./node_modules/@biomejs/cli-linux-x64-musl/biome biome check --write src serve.js",
+    "format": "BIOME_BINARY=./node_modules/@biomejs/cli-linux-x64-musl/biome biome format --write src serve.js"
+  },
+  "dependencies": {
+    "@turf/turf": "^7.1.0",
+    "maplibre-gl": "^4.7.1",
+    "suncalc": "^1.9.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@biomejs/cli-linux-x64-musl": "1.9.4",
+    "puppeteer": "^23.11.1"
+  }
+}
