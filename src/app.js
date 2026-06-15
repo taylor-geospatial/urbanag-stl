@@ -238,47 +238,24 @@ function loadGardens() {
 }
 
 async function loadCooling() {
+  // smooth (Gaussian) neighborhood cooling-potential surface, plasma-colorized PNG overlay
+  let b;
   try {
-    await (await fetch('data/cooling_stats.json')).json(); // skip if not built yet
+    b = await (await fetch('data/cooling_bounds.json')).json();
   } catch {
     return;
   }
-  map.addSource('cooling', { type: 'vector', url: `pmtiles://${DATA_BASE}/cooling.pmtiles` });
-  map.addLayer({
-    id: 'cooling',
-    type: 'fill',
-    source: 'cooling',
-    'source-layer': 'cooling',
-    layout: { visibility: 'none' },
-    paint: {
-      'fill-color': [
-        'interpolate',
-        ['linear'],
-        ['coalesce', ['get', 'cooling_C'], 0],
-        0,
-        'rgba(10,16,30,0)',
-        1,
-        '#15406b',
-        2.5,
-        '#1f8f86',
-        4,
-        '#54e0b8',
-        6,
-        '#a6fff0',
-      ],
-      'fill-opacity': 0.72,
+  map.addSource('cooling', { type: 'image', url: 'data/cooling.png', coordinates: [b.tl, b.tr, b.br, b.bl] });
+  map.addLayer(
+    {
+      id: 'cooling',
+      type: 'raster',
+      source: 'cooling',
+      layout: { visibility: 'none' },
+      paint: { 'raster-opacity': 0.78, 'raster-resampling': 'linear' },
     },
-  });
-  map.on('click', 'cooling', (e) => {
-    const p = e.features[0].properties;
-    new maplibregl.Popup({ closeButton: false })
-      .setLngLat(e.lngLat)
-      .setHTML(
-        `<b>−${(+p.cooling_C).toFixed(1)} °C</b> if greened to NDVI 0.4` +
-          `<br><span style="color:#8b97ad">now: NDVI ${(+p.ndvi).toFixed(2)} · ${(+p.lst).toFixed(1)} °C</span>`
-      )
-      .addTo(map);
-  });
+    firstSymbolId()
+  );
 }
 
 let heatScenes = [];

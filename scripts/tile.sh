@@ -24,10 +24,8 @@ PY
   --drop-densest-as-needed --extend-zooms-if-still-dropping --no-tile-size-limit --force /tmp/buildings_tile.geojson
 "$TIPPE" -o public/data/gardens.pmtiles -l gardens -Z9 -z16 \
   --drop-densest-as-needed --extend-zooms-if-still-dropping --force data/gardens.geojson
-if [ -f data/cooling.geojson ]; then
-  "$TIPPE" -o public/data/cooling.pmtiles -l cooling -Z9 -z16 --force data/cooling.geojson
-fi
 rm -f /tmp/buildings_tile.geojson
-# metadata + heat rasters travel alongside the tiles
-cp -f data/attribution.json data/cooling_stats.json data/heat_scenes.json data/heat_*.png public/data/ 2>/dev/null || true
-echo "built: public/data/{buildings,gardens,cooling}.{parquet,pmtiles} + metadata"
+# metadata + raster overlays (heat scenes + smooth cooling surface) travel alongside the tiles
+cp -f data/attribution.json data/cooling_stats.json data/cooling_bounds.json data/heat_scenes.json \
+   data/heat_*.png data/cooling.png public/data/ 2>/dev/null || true
+echo "built: public/data/{buildings,gardens}.{parquet,pmtiles} + cooling.png + metadata"
