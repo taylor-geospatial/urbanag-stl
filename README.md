@@ -34,6 +34,12 @@ Built as a companion analysis to [ropitz/urban_ag_stl](https://github.com/ropitz
 - **bun** builds the JS bundle (`src/app.js` → `public/app.js`); **biome** lints/formats.
 - Data prep in Python (`uv` venv): Overture buildings, Overpass gardens,
   Microsoft Planetary Computer for Landsat LST + Sentinel-2 NDVI.
+- **Cloud-native vector data, no GeoJSON shipped.** Canonical store is **FlatGeobuf**
+  (`*.fgb`, spatially indexed — host on Source Cooperative); the map renders from
+  **PMTiles** (`*.pmtiles`, HTTP range). Buildings/gardens load as MapLibre vector tiles;
+  the rooftop sub-layers (greenery, priority, candidates) are filter expressions on the
+  one buildings source, and shadows are cast from `querySourceFeatures` of the in-view tiles.
+  `window.DATA_BASE` can repoint the tiles at a remote bucket via the HTTPS proxy.
 
 ## Run
 
@@ -61,6 +67,8 @@ python scripts/prep_buildings.py      # slim + height/area/candidate flags
 python scripts/fetch_scenes_ndvi.py   # seasonal LST pngs (Winter→Fall), fixed 5–50°C ramp
 python scripts/analyze_rooftops.py    # roof NDVI (within-polygon + context), LST attribution,
                                       # green-roof flags, heat-relief priority, attribution.json
+python scripts/lst_timeseries.py      # per-building summer roof-LST 2019–2024 (click sparkline)
+bash   scripts/tile.sh                # GeoJSON intermediates -> FlatGeobuf + PMTiles (public/data)
 ```
 
 ## Deploy

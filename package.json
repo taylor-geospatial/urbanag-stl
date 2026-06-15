@@ -15,7 +15,9 @@
   },
   "dependencies": {
     "@turf/turf": "^7.1.0",
+    "flatgeobuf": "^4.4.0",
     "maplibre-gl": "^4.7.1",
+    "pmtiles": "^4.4.1",
     "suncalc": "^1.9.0"
   },
   "devDependencies": {

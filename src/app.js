@@ -1,6 +1,12 @@
 import { convex, explode, featureCollection, transformTranslate } from '@turf/turf';
 import maplibregl from 'maplibre-gl';
+import { Protocol } from 'pmtiles';
 import SunCalc from 'suncalc';
+
+// Vector tiles are PMTiles (cloud-native, HTTP range). DATA_BASE can point at a
+// Source Cooperative bucket via the HTTPS proxy; canonical store is FlatGeobuf (.fgb).
+const DATA_BASE = window.DATA_BASE || 'data';
+maplibregl.addProtocol('pmtiles', new Protocol().tile);
 
 /* St. Louis Cool Roofs — heat, shade & urban-ag insight map.
    MapLibre + SunCalc + Turf, no build step. */
@@ -13,9 +19,7 @@ const CAND_MIN_AREA = 350; // m² flat roof to flag as rooftop-garden candidate
 const CAND_MAX_H = 20; // m — taller than this is awkward to garden
 
 const RAD = 180 / Math.PI;
-let buildings = null;
-let candidates = null;
-let tsData = null; // per-building roof-LST time series, lazy-loaded sidecar
+let buildingsReady = false;
 let playing = false;
 let playTimer = null;
 
@@ -54,49 +58,24 @@ map.on('load', async () => {
 });
 
 /* ---------------- data layers ---------------- */
-async function loadBuildings() {
-  let gj;
-  try {
-    gj = await (await fetch('data/buildings.json')).json();
-  } catch (e) {
-    console.warn('no buildings yet', e);
-    return;
-  }
-  buildings = gj;
-  loadTimeSeries(); // click-only data — fetched lazily, off the first-paint path
-
-  // _h, _area, _cand precomputed by prep_buildings.py; _ndvi/_roofveg by fetch_scenes_ndvi.py
-  const cand = [];
-  const roofveg = [];
-  const priority = [];
-  gj.features.forEach((f, i) => {
-    f.id = i;
-    if (f.properties._cand) cand.push(f);
-    if (f.properties._roofveg) roofveg.push(f);
-    if (f.properties._pflag) priority.push(f);
-  });
-  candidates = { type: 'FeatureCollection', features: cand };
-
-  map.addSource('buildings', { type: 'geojson', data: gj });
+function loadBuildings() {
+  // buildings as PMTiles vector tiles; sub-layers are filter expressions on the same source
+  map.addSource('buildings', { type: 'vector', url: `pmtiles://${DATA_BASE}/buildings.pmtiles` });
+  // client-computed shade geometry stays in lightweight geojson sources
   map.addSource('shadows', { type: 'geojson', data: empty() });
   for (let i = 0; i < SH_N; i++) map.addSource(`sh${i}`, { type: 'geojson', data: empty() });
-  map.addSource('candidates', { type: 'geojson', data: candidates });
-  map.addSource('roofveg', { type: 'geojson', data: { type: 'FeatureCollection', features: roofveg } });
-  map.addSource('priority', { type: 'geojson', data: { type: 'FeatureCollection', features: priority } });
 
-  // shadows sit flat on the ground, beneath the extrusions
   map.addLayer({
     id: 'shadows',
     type: 'fill',
     source: 'shadows',
-    // cool blue shade reads as "cooler ground" over the warm heat raster
-    paint: { 'fill-color': '#0b1f4d', 'fill-opacity': 0.5 },
+    paint: { 'fill-color': '#0b1f4d', 'fill-opacity': 0.5 }, // cool shade over warm heat
   });
-  // 3D buildings, shaded teal->indigo by height
   map.addLayer({
     id: 'buildings-3d',
     type: 'fill-extrusion',
     source: 'buildings',
+    'source-layer': 'buildings',
     paint: {
       'fill-extrusion-height': ['get', '_h'],
       'fill-extrusion-base': 0,
@@ -116,11 +95,12 @@ async function loadBuildings() {
       ],
     },
   });
-  // flat-roof garden candidates (heuristic: big low roof) — amber caps, toggleable
   map.addLayer({
     id: 'roof-candidates',
     type: 'fill-extrusion',
-    source: 'candidates',
+    source: 'buildings',
+    'source-layer': 'buildings',
+    filter: ['==', ['get', '_cand'], 1],
     layout: { visibility: 'none' },
     paint: {
       'fill-extrusion-height': ['+', ['get', '_h'], 1],
@@ -129,8 +109,6 @@ async function loadBuildings() {
       'fill-extrusion-opacity': 0.9,
     },
   });
-  // shade-hours heatmap: one flat fill per daylight hour; overlapping alpha stacks,
-  // so ground shaded for more of the day reads darker/cooler.
   for (let i = 0; i < SH_N; i++) {
     map.addLayer({
       id: `sh${i}`,
@@ -140,11 +118,12 @@ async function loadBuildings() {
       paint: { 'fill-color': '#1f5bd6', 'fill-opacity': 0.14 },
     });
   }
-  // heat-relief priority — best roofs for a NEW garden (hot + bare + buildable)
   map.addLayer({
     id: 'priority',
     type: 'fill-extrusion',
-    source: 'priority',
+    source: 'buildings',
+    'source-layer': 'buildings',
+    filter: ['==', ['get', '_pflag'], 1],
     layout: { visibility: 'none' },
     paint: {
       'fill-extrusion-height': ['+', ['get', '_h'], 1.5],
@@ -163,11 +142,12 @@ async function loadBuildings() {
       'fill-extrusion-opacity': 0.96,
     },
   });
-  // NDVI outliers (likely existing rooftop greenery) — bright green caps, on by default
   map.addLayer({
     id: 'roofveg',
     type: 'fill-extrusion',
-    source: 'roofveg',
+    source: 'buildings',
+    'source-layer': 'buildings',
+    filter: ['==', ['get', '_roofveg'], 1],
     paint: {
       'fill-extrusion-height': ['+', ['get', '_h'], 1.5],
       'fill-extrusion-base': ['get', '_h'],
@@ -183,28 +163,30 @@ async function loadBuildings() {
   map.on('mouseenter', 'buildings-3d', () => cursor('pointer'));
   map.on('mouseleave', 'buildings-3d', () => cursor(''));
   map.on('moveend', scheduleShadows);
+  map.on('idle', () => {
+    if (!buildingsReady) {
+      buildingsReady = true;
+      scheduleShadows();
+    }
+  });
 }
 
-async function loadTimeSeries() {
-  try {
-    tsData = await (await fetch('data/lst_ts.json')).json();
-  } catch {
-    tsData = null;
-  }
+// in-view building features (lng/lat geometry) straight from the vector tiles
+function inViewBuildings() {
+  if (!map.getLayer('buildings-3d')) return [];
+  return map.querySourceFeatures('buildings', {
+    sourceLayer: 'buildings',
+    filter: ['>=', ['get', '_h'], MIN_SHADOW_H],
+  });
 }
 
-async function loadGardens() {
-  let gj;
-  try {
-    gj = await (await fetch('data/gardens.json')).json();
-  } catch {
-    return;
-  }
-  map.addSource('gardens', { type: 'geojson', data: gj });
+function loadGardens() {
+  map.addSource('gardens', { type: 'vector', url: `pmtiles://${DATA_BASE}/gardens.pmtiles` });
   map.addLayer({
     id: 'gardens-fill',
     type: 'fill',
     source: 'gardens',
+    'source-layer': 'gardens',
     paint: {
       'fill-color': [
         'match',
@@ -228,6 +210,7 @@ async function loadGardens() {
     id: 'gardens-line',
     type: 'line',
     source: 'gardens',
+    'source-layer': 'gardens',
     paint: { 'line-color': '#d6ff7a', 'line-width': 1.1, 'line-opacity': 0.7 },
   });
   // labels for named green space
@@ -235,6 +218,7 @@ async function loadGardens() {
     id: 'gardens-label',
     type: 'symbol',
     source: 'gardens',
+    'source-layer': 'gardens',
     filter: ['all', ['has', 'name'], ['!=', ['get', 'name'], '']],
     layout: {
       'text-field': ['get', 'name'],
@@ -380,13 +364,15 @@ function castShadows(altDeg, azDeg, cap) {
   if (altDeg <= 1) return [];
   const shadowBearing = (azDeg + 180) % 360;
   const tan = Math.tan(altDeg / RAD);
-  const b = map.getBounds();
   const feats = [];
-  for (const f of buildings.features) {
+  const seen = new Set();
+  for (const f of inViewBuildings()) {
     const h = f.properties._h;
-    if (h < MIN_SHADOW_H) continue;
     const c = firstVertex(f.geometry);
-    if (!c || !Number.isFinite(c[0]) || !b.contains([c[0], c[1]])) continue;
+    if (!c) continue;
+    const key = `${c[0].toFixed(5)},${c[1].toFixed(5)}`; // de-dupe tile-split copies
+    if (seen.has(key)) continue;
+    seen.add(key);
     const L = Math.min(h / tan, 250) / 1000;
     try {
       const moved = transformTranslate(f, L, shadowBearing);
@@ -399,7 +385,7 @@ function castShadows(altDeg, azDeg, cap) {
 }
 
 function computeShadowsLive() {
-  if (!buildings || !map.getSource('shadows')) return;
+  if (!buildingsReady || !map.getSource('shadows')) return;
   if (!$('lyr-shadows').checked) {
     map.getSource('shadows').setData(empty());
     return;
@@ -410,7 +396,7 @@ function computeShadowsLive() {
 
 // stack SH_N hourly shadow sets across the selected season's daylight
 function computeShadeHours() {
-  if (!buildings) return;
+  if (!buildingsReady) return;
   const day = $('season').value;
   const times = [];
   for (let m = 0; m <= 24 * 60; m += 15) {
@@ -453,7 +439,7 @@ function onBuildingClick(e) {
       : '';
   const lstRow =
     lst != null ? `<div class="stat"><span>roof temp (summer)</span><b>${lst.toFixed(1)} °C</b></div>` : '';
-  const ts = (tsData && tsData[f.id]) || parseTs(p._lst_ts);
+  const ts = parseTs(p._ts);
   const tsBlock =
     ts && ts.length >= 3
       ? `<div class="ts-cap">summer roof temp, ${ts[0][0]}–${ts[ts.length - 1][0]}</div>${sparkline(ts)}`
