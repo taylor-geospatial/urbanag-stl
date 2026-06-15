@@ -1,4 +1,6 @@
-# STL Cool Roofs
+# STL Cool Roofs — `urbanag-stl`
+
+**Live:** https://research.taylorgeospatial.org/urbanag-stl/
 
 An interactive MapLibre map of **St. Louis** for urban-heat + urban-agriculture decisions:
 surface temperature, building shade, and where rooftop gardens already exist (or should go).
@@ -60,6 +62,13 @@ python scripts/fetch_scenes_ndvi.py   # seasonal LST pngs (Winter→Fall), fixed
 python scripts/analyze_rooftops.py    # roof NDVI (within-polygon + context), LST attribution,
                                       # green-roof flags, heat-relief priority, attribution.json
 ```
+
+## Deploy
+
+Pushing to `main` triggers `.github/workflows/deploy.yml`: GitHub Actions installs with bun,
+runs `bun run build`, and publishes `public/` to GitHub Pages. The committed `public/data/`
+(buildings, gardens, seasonal LST, NDVI/priority, LST time series) is served static; Pages
+gzips the `.json` so the ~9 MB buildings file transfers at ~2–3 MB.
 
 ## Caveats
 
