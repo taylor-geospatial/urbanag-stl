@@ -263,11 +263,14 @@ function loadGardens() {
   });
 }
 
+// NAIP + cooling are heavy image overlays, off by default. MapLibre eagerly fetches an
+// `image` source the moment it's added, so we only fetch the metadata at load and defer the
+// source/layer (and the ~1MB+ image) until the user first toggles the layer on.
+let naipBounds = null;
 async function loadNaip() {
   // the actual NAIP aerial the NDVI was computed from (same date) — for matched verification
-  let b;
   try {
-    b = await (await fetch('data/naip_bounds.json')).json();
+    naipBounds = await (await fetch('data/naip_bounds.json')).json();
   } catch {
     const t = $('lyr-naip');
     t.disabled = true;
@@ -275,7 +278,14 @@ async function loadNaip() {
     t.closest('.toggle').querySelector('.lbl').textContent = 'NAIP aerial (unavailable)';
     return;
   }
-  map.addSource('naip', { type: 'image', url: 'data/naip.png', coordinates: [b.tl, b.tr, b.br, b.bl] });
+  if (naipBounds.date)
+    $('lyr-naip').closest('.toggle').querySelector('.lbl').textContent = `NAIP aerial (${naipBounds.date})`;
+}
+
+function ensureNaip() {
+  if (!naipBounds || map.getSource('naip')) return;
+  const b = naipBounds;
+  map.addSource('naip', { type: 'image', url: 'data/naip.webp', coordinates: [b.tl, b.tr, b.br, b.bl] });
   map.addLayer(
     {
       id: 'naip',
@@ -286,18 +296,26 @@ async function loadNaip() {
     },
     firstSymbolId()
   );
-  if (b.date) $('lyr-naip').closest('.toggle').querySelector('.lbl').textContent = `NAIP aerial (${b.date})`;
 }
 
+let coolingBounds = null;
 async function loadCooling() {
-  // smooth (Gaussian) neighborhood cooling-potential surface, plasma-colorized PNG overlay
-  let b;
+  // smooth (Gaussian) neighborhood cooling-potential surface, plasma-colorized image overlay
   try {
-    b = await (await fetch('data/cooling_bounds.json')).json();
+    coolingBounds = await (await fetch('data/cooling_bounds.json')).json();
   } catch {
-    return;
+    coolingBounds = null;
   }
-  map.addSource('cooling', { type: 'image', url: 'data/cooling.png', coordinates: [b.tl, b.tr, b.br, b.bl] });
+}
+
+function ensureCooling() {
+  if (!coolingBounds || map.getSource('cooling')) return;
+  const b = coolingBounds;
+  map.addSource('cooling', {
+    type: 'image',
+    url: 'data/cooling.webp',
+    coordinates: [b.tl, b.tr, b.br, b.bl],
+  });
   map.addLayer(
     {
       id: 'cooling',
@@ -526,8 +544,7 @@ function onBuildingClick(e) {
   const ndt = parseTs(p._ndvi_ts);
   const ndviBlock =
     ndt && ndt.length >= 2
-      ? `<div class="ts-cap">roof greenness (peak NDVI), ${ndt[0][0]}–${ndt[ndt.length - 1][0]}</div>` +
-        sparkline(ndt, { map: (v) => v, fmt: (v) => v.toFixed(2), goodUp: true })
+      ? `<div class="ts-cap">roof greenness (peak NDVI), ${ndt[0][0]}–${ndt[ndt.length - 1][0]}</div>${sparkline(ndt, { map: (v) => v, fmt: (v) => v.toFixed(2), goodUp: true })}`
       : '';
   let note = '';
   if (p._roofveg) {
@@ -615,11 +632,13 @@ function wireUI() {
   $('ndvi-thr').oninput = applyNdvi;
   map.on('idle', applyNdvi);
   $('lyr-naip').onchange = (e) => {
+    if (e.target.checked) ensureNaip();
     vis('naip', e.target.checked);
     if (map.getLayer('heat')) map.setPaintProperty('heat', 'raster-opacity', e.target.checked ? 0.25 : 0.52);
   };
   $('lyr-priority').onchange = (e) => vis('priority', e.target.checked);
   $('lyr-cooling').onchange = (e) => {
+    if (e.target.checked) ensureCooling();
     vis('cooling', e.target.checked);
     if (map.getLayer('heat')) {
       map.setPaintProperty('heat', 'raster-opacity', e.target.checked ? 0.12 : 0.52);
