@@ -53,14 +53,7 @@ map.on('load', async () => {
     curve: 1.5,
   });
 
-  await Promise.all([
-    loadHeat(),
-    loadGardens(),
-    loadBuildings(),
-    loadAttribution(),
-    loadCooling(),
-    loadNaip(),
-  ]);
+  await Promise.all([loadHeat(), loadGardens(), loadBuildings(), loadAttribution(), loadCooling()]);
   $('loading').classList.add('hidden');
 
   wireUI();
@@ -263,41 +256,10 @@ function loadGardens() {
   });
 }
 
-// NAIP + cooling are heavy image overlays, off by default. MapLibre eagerly fetches an
-// `image` source the moment it's added, so we only fetch the metadata at load and defer the
-// source/layer (and the ~1MB+ image) until the user first toggles the layer on.
-let naipBounds = null;
-async function loadNaip() {
-  // the actual NAIP aerial the NDVI was computed from (same date) — for matched verification
-  try {
-    naipBounds = await (await fetch('data/naip_bounds.json')).json();
-  } catch {
-    const t = $('lyr-naip');
-    t.disabled = true;
-    t.closest('.toggle').style.opacity = 0.5;
-    t.closest('.toggle').querySelector('.lbl').textContent = 'NAIP aerial (unavailable)';
-    return;
-  }
-  if (naipBounds.date)
-    $('lyr-naip').closest('.toggle').querySelector('.lbl').textContent = `NAIP aerial (${naipBounds.date})`;
-}
-
-function ensureNaip() {
-  if (!naipBounds || map.getSource('naip')) return;
-  const b = naipBounds;
-  map.addSource('naip', { type: 'image', url: 'data/naip.webp', coordinates: [b.tl, b.tr, b.br, b.bl] });
-  map.addLayer(
-    {
-      id: 'naip',
-      type: 'raster',
-      source: 'naip',
-      layout: { visibility: 'none' },
-      paint: { 'raster-opacity': 1, 'raster-resampling': 'linear' },
-    },
-    firstSymbolId()
-  );
-}
-
+// Cooling is a heavy image overlay, off by default. MapLibre eagerly fetches an `image`
+// source the moment it's added, so we only fetch the bounds at load and defer the
+// source/layer (and the image) until the user first toggles the layer on. The up-to-date
+// high-res aerial is the Esri World Imagery raster basemap (see loadHeat), not a static overlay.
 let coolingBounds = null;
 async function loadCooling() {
   // smooth (Gaussian) neighborhood cooling-potential surface, plasma-colorized image overlay
@@ -548,7 +510,7 @@ function onBuildingClick(e) {
       : '';
   let note = '';
   if (p._roofveg) {
-    note = `<div class="advice" style="background:linear-gradient(135deg,rgba(124,255,91,.16),rgba(94,234,212,.08));border-color:rgba(124,255,91,.4)"><b>Likely existing roof greenery.</b> This roof's NDVI is an outlier <i>and</i> greener than its block — toggle <i>Satellite imagery</i> to verify.</div>`;
+    note = `<div class="advice" style="background:linear-gradient(135deg,rgba(124,255,91,.16),rgba(94,234,212,.08));border-color:rgba(124,255,91,.4)"><b>Likely existing roof greenery.</b> This roof's NDVI is an outlier <i>and</i> greener than its block — toggle the <i>Aerial basemap</i> to verify.</div>`;
   } else if (p._pflag) {
     note = `<div class="advice" style="background:linear-gradient(135deg,rgba(255,94,168,.16),rgba(255,180,84,.08));border-color:rgba(255,94,168,.45)"><b>High heat-relief priority.</b> Hot, bare, buildable roof — greening it would cut the most surface heat here.</div>`;
   }
@@ -631,11 +593,6 @@ function wireUI() {
   };
   $('ndvi-thr').oninput = applyNdvi;
   map.on('idle', applyNdvi);
-  $('lyr-naip').onchange = (e) => {
-    if (e.target.checked) ensureNaip();
-    vis('naip', e.target.checked);
-    if (map.getLayer('heat')) map.setPaintProperty('heat', 'raster-opacity', e.target.checked ? 0.25 : 0.52);
-  };
   $('lyr-priority').onchange = (e) => vis('priority', e.target.checked);
   $('lyr-cooling').onchange = (e) => {
     if (e.target.checked) ensureCooling();

@@ -25,18 +25,18 @@ PY
 "$TIPPE" -o public/data/gardens.pmtiles -l gardens -Z9 -z16 \
   --drop-densest-as-needed --extend-zooms-if-still-dropping --force data/gardens.geojson
 rm -f /tmp/buildings_tile.geojson
-# metadata + raster overlays travel alongside the tiles. The heavy on-demand overlays
-# (NAIP aerial, cooling surface) ship as WebP — lazy-loaded only when toggled on, so they
-# stay off the initial page load. WebP keeps the nodata alpha and is ~10x smaller than PNG.
+# metadata + raster overlays travel alongside the tiles. The cooling surface ships as WebP —
+# lazy-loaded only when toggled on, so it stays off the initial page load. WebP keeps the
+# nodata alpha and is ~8x smaller than PNG. (Up-to-date hi-res aerial = Esri World Imagery
+# raster basemap, streamed live by the client — no static aerial overlay is built or shipped.)
 cp -f data/attribution.json data/cooling_stats.json data/cooling_bounds.json data/heat_scenes.json \
-   data/naip_bounds.json data/heat_*.png public/data/ 2>/dev/null || true
+   data/heat_*.png public/data/ 2>/dev/null || true
 python3 - <<'PY'
 from PIL import Image
 import os
-for name, q in [("naip", 82), ("cooling", 90)]:
-    src = f"data/{name}.png"
-    if os.path.exists(src):
-        Image.open(src).save(f"public/data/{name}.webp", "WEBP", quality=q, method=6)
-        print(f"  {name}.png -> public/data/{name}.webp")
+src = "data/cooling.png"
+if os.path.exists(src):
+    Image.open(src).save("public/data/cooling.webp", "WEBP", quality=90, method=6)
+    print("  cooling.png -> public/data/cooling.webp")
 PY
-echo "built: public/data/{buildings,gardens}.{parquet,pmtiles} + {naip,cooling}.webp + metadata"
+echo "built: public/data/{buildings,gardens}.{parquet,pmtiles} + cooling.webp + metadata"

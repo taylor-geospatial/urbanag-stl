@@ -23,14 +23,15 @@ Built as a companion analysis to [ropitz/urban_ag_stl](https://github.com/ropitz
   **and** greener than its surrounding block. An **interactive NDVI-threshold slider** tunes recall
   live; a click shows the roof's **NDVI-by-summer sparkline** (persistent-high = real garden,
   one-off spike = noise). Per-building 10 m pixels still mix on small roofs — persistence + the
-  slider + the **NAIP/Esri imagery toggles** are the verification path.
+  slider + the **aerial basemap toggle** are the verification path.
 - **Heat attribution** — roof land-surface temperature falls with roof NDVI; green roofs run
-  **~3–4 °F cooler** than bare roofs (NAIP 1 m). Shown in the *Heat ↔ greenery* panel (all °F).
+  **~3–4 °F cooler** than bare roofs (Sentinel-2). Shown in the *Heat ↔ greenery* panel (all °F).
 - **Heat-relief priority** — hot + bare + buildable roofs ranked as the best places for a **new**
   garden to cut surface heat (where greening pays off most).
 - **Shade-hours heatmap** — stacks each daylight hour's shadows so all-day-shaded ground reads
   darkest (cool microclimate / shade-tolerant planting).
-- **Satellite imagery toggle** — Esri World Imagery to visually verify the flagged rooftops.
+- **Aerial basemap toggle** — current high-res **Esri World Imagery** (tile-streamed) to
+  visually verify the flagged rooftops against up-to-date imagery.
 - **Gardens & greenhouses** — OSM `leisure=garden`, greenhouses, allotments, parks, orchards.
 - **Flat-roof candidates** — large low roofs that are good greenhouse/garden sites.
 
