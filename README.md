@@ -1,9 +1,11 @@
-# STL Cool Roofs — `urbanag-stl`
+# Cool Roofs St. Louis — `urbanag-stl`
 
 **Live:** https://research.taylorgeospatial.org/urbanag-stl/
 
-An interactive MapLibre map of **St. Louis** for urban-heat + urban-agriculture decisions:
-surface temperature, building shade, and where rooftop gardens already exist (or should go).
+A **Taylor Geospatial** project. An interactive MapLibre map of **St. Louis** for urban-heat +
+urban-agriculture decisions: surface temperature, building shade, and where rooftop gardens
+already exist (or should go). Brand type is Taylor Geospatial's **gintronic** / **degular-text**
+(Adobe Fonts kit) over the espresso/cream/orange palette.
 
 Built as a companion analysis to [ropitz/urban_ag_stl](https://github.com/ropitz/urban_ag_stl)
 (which scores vacant ground parcels); this app adds the heat / rooftop / shadow dimension.

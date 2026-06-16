@@ -3,11 +3,14 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-<title>STL Cool Roofs — heat, shade &amp; urban agriculture</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230a0e17'/%3E%3Ccircle cx='16' cy='16' r='8' fill='%23ffb454'/%3E%3Cpath d='M16 9a7 7 0 0 0 0 14z' fill='%23a3e635'/%3E%3C/svg%3E" />
+<title>Cool Roofs St. Louis — Taylor Geospatial</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%233B1E1C'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23FF4F2C'/%3E%3Cpath d='M16 4v4M16 24v4M4 16h4M24 16h4' stroke='%23F4F4EB' stroke-width='2.4' stroke-linecap='round'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://use.typekit.net" crossorigin />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<!-- Taylor Geospatial brand type: gintronic (display) + degular-text (body) -->
+<link rel="stylesheet" href="https://use.typekit.net/imj6poz.css" />
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
 <link href="style.css" rel="stylesheet" />
 </head>
@@ -15,11 +18,14 @@
 <div id="map"></div>
 
 <!-- top brand -->
-<header id="brand">
-  <div class="mark"></div>
+<header id="brand" class="glass">
+  <a class="tg-logo" href="https://taylorgeospatial.org" target="_blank" rel="noopener" aria-label="Taylor Geospatial">
+    <span class="tg-wordmark"></span>
+  </a>
+  <span class="brand-div"></span>
   <div class="title">
-    <h1>St.&nbsp;Louis <span>Cool&nbsp;Roofs</span></h1>
-    <p>surface heat · shade · where gardens belong</p>
+    <h1>Cool&nbsp;Roofs <span>St.&nbsp;Louis</span></h1>
+    <p>surface heat · shade · urban agriculture</p>
   </div>
 </header>
 
@@ -85,6 +91,10 @@
 
   <button id="deepdive" class="btn" style="width:100%;margin-top:4px">⤢ Downtown deep-dive</button>
   <p class="hint">Click a building for height, roof temperature trend, shadow, and the best-shaded side to plant.</p>
+  <a class="tg-credit" href="https://taylorgeospatial.org" target="_blank" rel="noopener">
+    <span class="tg-credit-mark"></span>
+    <span>A <b>Taylor&nbsp;Geospatial</b> project · GeoAI for global challenges</span>
+  </a>
 </aside>
 
 <!-- info card (appears on building click) -->

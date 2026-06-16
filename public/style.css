@@ -1,26 +1,37 @@
 :root{
-  --bg:#070b14;
-  --ink:#e8edf6;
-  --muted:#8b97ad;
-  --glass:rgba(16,22,36,.72);
-  --stroke:rgba(140,160,200,.16);
+  /* Taylor Geospatial brand */
+  --tg-espresso:#3B1E1C;   /* primary dark / logo */
+  --tg-cream:#F4F4EB;      /* brand light */
+  --tg-orange:#FF4F2C;     /* signature accent */
+  --tg-ink:#303030;
+
+  /* dark map UI tuned to the espresso brand */
+  --bg:#120a09;
+  --ink:#f4f1ea;
+  --muted:#a99b93;
+  --glass:rgba(33,20,18,.74);
+  --stroke:rgba(244,79,44,.16);
   --teal:#5eead4;
   --lime:#a3e635;
   --amber:#ffb454;
-  --hot:#ff5a3c;
-  --shadow-blue:#0a1326;
-  --radius:16px;
+  --hot:var(--tg-orange);
+  --shadow-blue:#1a0d0b;
+  --radius:14px;
+  --font-display:"gintronic","degular-text",system-ui,sans-serif;
+  --font-body:"degular-text","gintronic",system-ui,sans-serif;
+  --font-mono:"Spline Sans Mono",ui-monospace,monospace;
 }
 *{box-sizing:border-box}
 html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
-  font-family:"Space Grotesk",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  font-family:var(--font-body);-webkit-font-smoothing:antialiased}
 #map{position:absolute;inset:0}
 b,h1,h2,h3{font-weight:600}
+h1,h2,h3{font-family:var(--font-display)}
 
 /* ambient warm glow behind UI to add depth */
 body::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;
-  background:radial-gradient(900px 500px at 18% 110%, rgba(255,90,60,.10), transparent 60%),
-             radial-gradient(700px 500px at 90% -10%, rgba(94,234,212,.07), transparent 55%);}
+  background:radial-gradient(900px 520px at 16% 112%, rgba(255,79,44,.14), transparent 60%),
+             radial-gradient(760px 520px at 92% -12%, rgba(255,79,44,.06), transparent 55%);}
 
 .glass{background:var(--glass);backdrop-filter:blur(18px) saturate(1.2);
   -webkit-backdrop-filter:blur(18px) saturate(1.2);
@@ -28,17 +39,22 @@ body::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:1;
   box-shadow:0 18px 50px rgba(0,0,0,.45)}
 
 /* brand */
-#brand{position:absolute;top:18px;left:22px;z-index:5;display:flex;gap:13px;align-items:center}
-#brand .mark{width:34px;height:34px;border-radius:9px;
-  background:conic-gradient(from 200deg,var(--hot),var(--amber),var(--lime),var(--teal),var(--hot));
-  box-shadow:0 0 24px rgba(255,120,60,.45);}
-#brand h1{margin:0;font-size:21px;letter-spacing:-.02em;line-height:1}
-#brand h1 span{color:var(--teal)}
-#brand p{margin:3px 0 0;font-size:11.5px;color:var(--muted);letter-spacing:.04em;text-transform:lowercase}
+#brand{position:absolute;top:18px;left:22px;z-index:5;display:flex;gap:16px;align-items:center;
+  padding:11px 18px 11px 16px}
+.tg-logo{display:flex;align-items:center;text-decoration:none}
+.tg-wordmark{display:block;width:150px;height:37px;background:var(--tg-cream);transition:background .2s;
+  -webkit-mask:url(assets/tg-wordmark.svg) left center/contain no-repeat;
+          mask:url(assets/tg-wordmark.svg) left center/contain no-repeat}
+.tg-logo:hover .tg-wordmark{background:var(--tg-orange)}
+.brand-div{width:1px;height:38px;background:linear-gradient(var(--stroke),transparent);
+  background:rgba(244,241,234,.18)}
+#brand h1{margin:0;font-size:19px;letter-spacing:-.01em;line-height:1.05;font-weight:600}
+#brand h1 span{display:block;color:var(--tg-orange);font-weight:500;letter-spacing:.01em}
+#brand p{margin:4px 0 0;font-size:11px;color:var(--muted);letter-spacing:.05em;text-transform:lowercase}
 
 /* panel */
-#panel{position:absolute;top:84px;left:22px;z-index:5;width:296px;padding:18px 18px 16px;
-  max-height:calc(100% - 110px);overflow:auto;animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
+#panel{position:absolute;top:100px;left:22px;z-index:5;width:296px;padding:18px 18px 16px;
+  max-height:calc(100% - 124px);overflow:auto;animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
 .block{padding:6px 0 14px;border-bottom:1px solid var(--stroke)}
 .block:last-of-type{border-bottom:none}
 h2{font-size:11px;text-transform:uppercase;letter-spacing:.13em;color:var(--muted);margin:2px 0 12px}
@@ -49,8 +65,8 @@ h2{font-size:11px;text-transform:uppercase;letter-spacing:.13em;color:var(--mute
 .sw{width:34px;height:19px;border-radius:20px;background:#27324a;position:relative;transition:.22s;flex:0 0 auto}
 .sw::after{content:"";position:absolute;top:2px;left:2px;width:15px;height:15px;border-radius:50%;
   background:#cdd6e6;transition:.22s}
-.toggle input:checked + .sw{background:linear-gradient(90deg,var(--teal),var(--lime))}
-.toggle input:checked + .sw::after{transform:translateX(15px);background:#06210e}
+.toggle input:checked + .sw{background:linear-gradient(90deg,var(--tg-orange),#ff8a4c)}
+.toggle input:checked + .sw::after{transform:translateX(15px);background:var(--tg-espresso)}
 .lbl{color:var(--ink)}
 
 /* sun readout */
@@ -67,8 +83,8 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 .row{display:flex;gap:8px}
 .btn,.sel{flex:1;background:rgba(255,255,255,.05);color:var(--ink);border:1px solid var(--stroke);
   border-radius:10px;padding:8px 10px;font-family:inherit;font-size:12.5px;cursor:pointer;transition:.18s}
-.btn:hover{background:rgba(94,234,212,.14);border-color:var(--teal)}
-.btn.on{background:linear-gradient(90deg,var(--teal),var(--lime));color:#06210e;border-color:transparent}
+.btn:hover{background:rgba(255,79,44,.16);border-color:var(--tg-orange)}
+.btn.on{background:linear-gradient(90deg,var(--tg-orange),#ff8a4c);color:var(--tg-espresso);border-color:transparent}
 .sel{appearance:none}
 
 /* legend */
@@ -100,8 +116,20 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 
 .hint{font-size:11.5px;color:var(--muted);line-height:1.5;margin:14px 0 0}
 
+/* Taylor Geospatial credit */
+.tg-credit{display:flex;align-items:center;gap:9px;margin:16px 0 2px;padding-top:13px;
+  border-top:1px solid var(--stroke);text-decoration:none;color:var(--muted);
+  font-size:10.5px;line-height:1.4;letter-spacing:.02em;transition:color .18s}
+.tg-credit b{color:var(--tg-cream);font-weight:600}
+.tg-credit:hover{color:var(--ink)}
+.tg-credit:hover b{color:var(--tg-orange)}
+.tg-credit-mark{flex:0 0 auto;width:20px;height:20px;border-radius:6px;background:var(--tg-espresso);
+  border:1px solid rgba(244,79,44,.3);position:relative}
+.tg-credit-mark::before{content:"";position:absolute;inset:5px;border-radius:50%;
+  background:var(--tg-orange);box-shadow:0 0 8px rgba(255,79,44,.6)}
+
 /* info card */
-#info{position:absolute;top:84px;right:22px;z-index:6;width:300px;padding:16px 18px;
+#info{position:absolute;top:100px;right:22px;z-index:6;width:300px;padding:16px 18px;
   animation:rise .35s cubic-bezier(.2,.8,.2,1) both}
 #info h3{margin:2px 26px 10px 0;font-size:16px}
 #info-close{position:absolute;top:10px;right:12px;background:none;border:none;color:var(--muted);
@@ -125,7 +153,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
 @keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 
 .maplibregl-popup-content{background:var(--glass);backdrop-filter:blur(14px);color:var(--ink);
-  border:1px solid var(--stroke);border-radius:12px;font-family:"Space Grotesk",sans-serif;padding:10px 13px}
+  border:1px solid var(--stroke);border-radius:12px;font-family:var(--font-body);padding:10px 13px}
 .maplibregl-popup-tip{display:none}
 .maplibregl-ctrl-group{background:var(--glass)!important;border:1px solid var(--stroke)!important}
 @media (max-width:640px){#panel{width:calc(100% - 44px)}#info{display:none}}
