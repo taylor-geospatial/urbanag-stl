@@ -38,6 +38,7 @@ const map = new maplibregl.Map({
 });
 map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), 'bottom-right');
 map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-right');
+window._map = map; // exposed for debugging / programmatic tests
 
 const $ = (id) => document.getElementById(id);
 
