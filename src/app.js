@@ -582,10 +582,15 @@ function wireUI() {
     const thr = +$('ndvi-thr').value / 100;
     $('ndvi-val').textContent = thr.toFixed(2);
     if (map.getLayer('roofveg')) map.setFilter('roofveg', roofvegFilter(thr));
-    if (!$('lyr-roofveg').checked) {
-      $('lyr-roofveg').checked = true;
-      vis('roofveg', true);
-    }
+  const applyNdvi = () => {
+    const thr = +$('ndvi-thr').value / 100;
+    $('ndvi-val').textContent = thr.toFixed(2);
+    if (map.getLayer('roofveg')) map.setFilter('roofveg', roofvegFilter(thr));
+  requestAnimationFrame(() => {
+    const n = map.queryRenderedFeatures({ layers: ['roofveg'] }).length;
+    $('ndvi-count').textContent = `${n} in view`;
+  });
+};
     requestAnimationFrame(() => {
       const n = map.queryRenderedFeatures({ layers: ['roofveg'] }).length;
       $('ndvi-count').textContent = `${n} in view`;
