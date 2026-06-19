@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>STL Urban Ag — Taylor Geospatial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  /* ── TG tokens ── */
+  :root {
+    --brown:      #3b1e1c;
+    --ivory:      #f4f4eb;
+    --periwinkle: #80a0d8;
+    --red:        #ff4f2c;
+    --lblue:      #a7d0dc;
+    --green:      #cff29e;
+    --grad:       linear-gradient(261deg, #ff4f2c 0%, #80a0d8 100%);
+    --font-sans:  'Space Grotesk', 'Open Sans', sans-serif;
+    --font-mono:  'JetBrains Mono', 'Inconsolata', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--ivory);
+    color: var(--brown);
+    line-height: 1.6;
+  }
+
+  /* ── NAV ── */
+  nav {
+    background: var(--brown);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    height: 56px;
+  }
+  .nav-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+  /* TG brandmark approximated in SVG */
+  .nav-brand svg { flex-shrink: 0; }
+  .nav-wordmark {
+    font-family: var(--font-sans);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--ivory);
+    letter-spacing: 0.01em;
+    line-height: 1.2;
+  }
+  .nav-wordmark span {
+    display: block;
+    font-weight: 400;
+    font-size: 0.7rem;
+    color: var(--periwinkle);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-family: var(--font-mono);
+  }
+  .nav-tag {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    color: rgba(244,244,235,0.45);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: var(--brown);
+    color: var(--ivory);
+    padding: 4rem 2rem 3.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    /* subtle satellite-texture overlay via gradient */
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 70% 110%, rgba(128,160,216,0.18) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 80% at 100% 0%, rgba(255,79,44,0.10) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero-inner {
+    max-width: 860px;
+    margin: 0 auto;
+    position: relative;
+  }
+  .hero-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--periwinkle);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+  .hero-eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 24px;
+    height: 2px;
+    background: var(--grad);
+    border-radius: 1px;
+  }
+  .hero h1 {
+    font-size: clamp(2rem, 5vw, 3.2rem);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.02em;
+  }
+  .hero h1 em {
+    font-style: normal;
+    background: var(--grad);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-sub {
+    font-size: 1.1rem;
+    color: rgba(244,244,235,0.72);
+    max-width: 560px;
+    margin-top: 0.75rem;
+  }
+
+  /* event strip */
+  .event-strip {
+    display: flex;
+    gap: 0;
+    margin-top: 2.5rem;
+    border: 1px solid rgba(244,244,235,0.15);
+    border-radius: 8px;
+    overflow: hidden;
+    max-width: 640px;
+  }
+  .event-cell {
+    flex: 1;
+    padding: 0.9rem 1.2rem;
+    border-right: 1px solid rgba(244,244,235,0.12);
+  }
+  .event-cell:last-child { border-right: none; }
+  .event-cell-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--periwinkle);
+    margin-bottom: 0.25rem;
+  }
+  .event-cell-value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--ivory);
+    line-height: 1.2;
+  }
+  .event-cell-sub {
+    font-size: 0.75rem;
+    color: rgba(244,244,235,0.5);
+    margin-top: 0.1rem;
+  }
+
+  /* ── MAIN CONTENT ── */
+  main {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 3rem 2rem 5rem;
+  }
+
+  /* intro block */
+  .intro {
+    font-size: 1.05rem;
+    color: var(--brown);
+    max-width: 700px;
+    margin-bottom: 2.5rem;
+    border-left: 3px solid var(--periwinkle);
+    padding-left: 1.2rem;
+    line-height: 1.7;
+  }
+
+  /* section label */
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--periwinkle);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .section-label::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(59,30,28,0.12);
+    max-width: 200px;
+  }
+
+  /* map cards */
+  .map-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 3rem;
+  }
+  .map-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+    background: #fff;
+    border: 1px solid rgba(59,30,28,0.1);
+    border-radius: 10px;
+    padding: 1.2rem 1.4rem;
+    text-decoration: none;
+    color: var(--brown);
+    transition: border-color 0.18s, box-shadow 0.18s, transform 0.18s;
+    position: relative;
+  }
+  .map-card:hover {
+    border-color: var(--periwinkle);
+    box-shadow: 0 4px 20px rgba(128,160,216,0.18);
+    transform: translateY(-2px);
+  }
+  .map-card-num {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--ivory);
+    background: var(--brown);
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+  }
+  .map-card-body { flex: 1; }
+  .map-card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    line-height: 1.3;
+    margin-bottom: 0.3rem;
+  }
+  .map-card-desc {
+    font-size: 0.85rem;
+    color: rgba(59,30,28,0.62);
+    line-height: 1.5;
+  }
+  .map-card-arrow {
+    font-size: 1.1rem;
+    color: var(--periwinkle);
+    align-self: center;
+    flex-shrink: 0;
+    transition: transform 0.18s;
+  }
+  .map-card:hover .map-card-arrow { transform: translateX(4px); }
+
+  /* rooftop card — different accent */
+  .map-card.rooftop .map-card-num {
+    background: var(--grad);
+  }
+
+  /* notebook card */
+  .map-card.notebook .map-card-num {
+    background: rgba(59,30,28,0.15);
+    color: var(--brown);
+  }
+
+  /* ── CONTEXT BLOCK ── */
+  .context {
+    background: var(--brown);
+    color: var(--ivory);
+    border-radius: 12px;
+    padding: 2rem 2rem 2rem;
+    margin-bottom: 3rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    align-items: start;
+  }
+  @media (max-width: 600px) { .context { grid-template-columns: 1fr; } }
+  .context-label {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--periwinkle);
+    margin-bottom: 0.6rem;
+  }
+  .context h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+    line-height: 1.25;
+  }
+  .context p {
+    font-size: 0.9rem;
+    color: rgba(244,244,235,0.75);
+    line-height: 1.65;
+  }
+  .context p + p { margin-top: 0.75rem; }
+  .stat-row {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .stat-item {
+    border-top: 1px solid rgba(244,244,235,0.12);
+    padding-top: 1rem;
+  }
+  .stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+    background: var(--grad);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .stat-desc {
+    font-size: 0.8rem;
+    color: rgba(244,244,235,0.6);
+    line-height: 1.4;
+  }
+
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--brown);
+    color: rgba(244,244,235,0.5);
+    text-align: center;
+    padding: 1.5rem 2rem;
+    font-size: 0.75rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.04em;
+  }
+  footer a { color: var(--periwinkle); text-decoration: none; }
+  footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="https://taylorgeospatial.org" target="_blank" rel="noopener">
+    <!-- TG brandmark approximated -->
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="14" cy="14" r="13" stroke="#f4f4eb" stroke-width="1.5"/>
+      <path d="M8 14 Q14 6 20 14 Q14 22 8 14Z" fill="#80a0d8" opacity="0.7"/>
+      <circle cx="14" cy="14" r="2.5" fill="#ff4f2c"/>
+    </svg>
+    <div class="nav-wordmark">
+      Taylor Geospatial
+      <span>For the Digital Public Good</span>
+    </div>
+  </a>
+  <span class="nav-tag">STL Urban Ag</span>
+</nav>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-eyebrow">GeoAI · Urban Agriculture · St. Louis</div>
+    <h1>Urban Agriculture<br>in a <em>Warmer St. Louis</em></h1>
+    <p class="hero-sub">Suitability modeling and interactive maps to help build a climate-resilient urban food system — for farmers, planners, and community leaders.</p>
+
+    <div class="event-strip">
+      <div class="event-cell">
+        <div class="event-cell-label">Created for the STL Urban Ag Workshop</div>
+        <div class="event-cell-value">July 29, 2026</div>
+        <div class="event-cell-sub">Part of the Climate Analogs Academy</div>
+      </div>
+      <div class="event-cell">
+        <div class="event-cell-label">Date</div>
+        <div class="event-cell-value">July 29, 2026</div>
+        <div class="event-cell-sub">Wednesday</div>
+      </div>
+      <div class="event-cell">
+        <div class="event-cell-label">Time</div>
+        <div class="event-cell-value">8:00 am – 4:00 pm</div>
+        <div class="event-cell-sub">Full-day workshop</div>
+      </div>
+      <div class="event-cell">
+        <div class="event-cell-label">Location</div>
+        <div class="event-cell-value">CIC, St. Louis</div>
+        <div class="event-cell-sub">St. Louis, MO</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main>
+
+  <p class="intro">
+    St. Louis is warming at roughly <strong>0.93 °F per decade</strong>. Climate analogs show our future looks like today's Oklahoma and Arkansas — hotter summers, shifting precipitation, and new pressures on local food production. These maps and tools help you understand where urban agriculture can work now, and how to plan for what's coming.
+  </p>
+
+  <!-- MAP TOOLS -->
+  <div class="section-label">Explore the maps</div>
+  <div class="map-grid">
+
+    <a class="map-card" href="urban_ag_suitability_stl_map.html">
+      <div class="map-card-num">1</div>
+      <div class="map-card-body">
+        <div class="map-card-title">Lot suitability across St. Louis</div>
+        <div class="map-card-desc">Where are conditions right for urban agriculture? Explore a city-wide suitability score for vacant and underused lots, based on soil, sun, access, and land use.</div>
+      </div>
+      <div class="map-card-arrow">→</div>
+    </a>
+
+    <a class="map-card" href="urban_ag_suitability_stl_map_top25.html">
+      <div class="map-card-num">2</div>
+      <div class="map-card-body">
+        <div class="map-card-title">The 25 most suitable lots</div>
+        <div class="map-card-desc">A shortlist of the highest-scoring sites in the city — useful for prioritizing outreach, investment, or site visits.</div>
+      </div>
+      <div class="map-card-arrow">→</div>
+    </a>
+
+    <a class="map-card" href="urban_ag_with_seeded_projects_map.html">
+      <div class="map-card-num">3</div>
+      <div class="map-card-body">
+        <div class="map-card-title">SEED STL sites + tornado impact areas</div>
+        <div class="map-card-desc">Overlays current SEED STL community garden locations and areas affected by the May 2025 EF3 tornado — showing where new urban agriculture could support recovery and resilience.</div>
+      </div>
+      <div class="map-card-arrow">→</div>
+    </a>
+
+    <a class="map-card rooftop" href="https://research.taylorgeospatial.org/urbanag-stl/">
+      <div class="map-card-num">↑</div>
+      <div class="map-card-body">
+        <div class="map-card-title">Rooftop urban agriculture — heat relief potential</div>
+        <div class="map-card-desc">Rooftop greening cuts surface temperatures and can expand growing space. Explore which St. Louis rooftops are best suited for container gardens or green roofs, and the cooling benefit they'd deliver.</div>
+      </div>
+      <div class="map-card-arrow">→</div>
+    </a>
+
+    <a class="map-card notebook" href="https://colab.research.google.com/github/ropitz/urban_ag_stl/blob/main/urban_ag_suitability_tornado.ipynb">
+      <div class="map-card-num">&lt;/&gt;</div>
+      <div class="map-card-body">
+        <div class="map-card-title">Adapt the analysis yourself</div>
+        <div class="map-card-desc">Want to change the weights, add a new data layer, or run the model for a different neighborhood? Open the Python notebook in Google Colab — no local setup required.</div>
+      </div>
+      <div class="map-card-arrow">→</div>
+    </a>
+
+  </div>
+
+  <!-- CLIMATE CONTEXT -->
+  <div class="context">
+    <div>
+      <div class="context-label">Why this matters</div>
+      <h2>St. Louis is becoming a different climate</h2>
+      <p>Annual average temperatures in St. Louis have risen steadily since the 1970s, and projections show continued warming through mid-century. The city's climate analogs — regions that today experience conditions St. Louis will face in coming decades — lie to the southwest, in states like Oklahoma, Arkansas, and Kansas.</p>
+      <p>That shift changes which crops thrive, when to plant, how much water is needed, and where the urban heat island hits hardest. Urban agriculture sited and designed for tomorrow's climate — not just today's — will be more productive and more resilient.</p>
+    </div>
+    <div class="stat-row">
+      <div class="stat-item">
+        <div class="stat-value">+0.93°F</div>
+        <div class="stat-desc">warming per decade observed in St. Louis (NWS data)</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">SW</div>
+        <div class="stat-desc">direction of climate analogs — today's Oklahoma &amp; Arkansas is tomorrow's St. Louis</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value">122°F</div>
+        <div class="stat-desc">peak rooftop surface temperature on hot summer days — a cooling opportunity, not just a hazard</div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <p>A <a href="https://taylorgeospatial.org" target="_blank" rel="noopener">Taylor Geospatial Institute</a> project · GeoAI for global challenges · <a href="mailto:rachel.opitz@taylorgeospatial.org">rachel.opitz@taylorgeospatial.org</a></p>
+</footer>
+
+</body>
+</html>
