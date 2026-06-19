@@ -578,24 +578,17 @@ function wireUI() {
   };
   $('lyr-roofs').onchange = (e) => vis('roof-candidates', e.target.checked);
   $('lyr-roofveg').onchange = (e) => vis('roofveg', e.target.checked);
-  const applyNdvi = () => {
-    const thr = +$('ndvi-thr').value / 100;
-    $('ndvi-val').textContent = thr.toFixed(2);
-    if (map.getLayer('roofveg')) map.setFilter('roofveg', roofvegFilter(thr));
-  const applyNdvi = () => {
-    const thr = +$('ndvi-thr').value / 100;
-    $('ndvi-val').textContent = thr.toFixed(2);
-    if (map.getLayer('roofveg')) map.setFilter('roofveg', roofvegFilter(thr));
-  requestAnimationFrame(() => {
-    const n = map.queryRenderedFeatures({ layers: ['roofveg'] }).length;
-    $('ndvi-count').textContent = `${n} in view`;
-  });
-};
-    requestAnimationFrame(() => {
-      const n = map.queryRenderedFeatures({ layers: ['roofveg'] }).length;
-      $('ndvi-count').textContent = `${n} in view`;
-    });
-  };
+ const applyNdvi = () => {
+   const thr = +$('ndvi-thr').value / 100;
+   $('ndvi-val').textContent = thr.toFixed(2);
+   if (map.getLayer('roofveg')) map.setFilter('roofveg', roofvegFilter(thr));
+   if ($('lyr-roofveg').checked) {
+     requestAnimationFrame(() => {
+       const n = map.queryRenderedFeatures({ layers: ['roofveg'] }).length;
+       $('ndvi-count').textContent = `${n} in view`;
+     });
+   }
+ };
   $('ndvi-thr').oninput = applyNdvi;
   map.on('idle', applyNdvi);
   $('lyr-priority').onchange = (e) => vis('priority', e.target.checked);
